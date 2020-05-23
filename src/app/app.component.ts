@@ -1,9 +1,9 @@
-import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
-import {FormBuilder, FormControl, FormGroup} from '@angular/forms';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
 
 const ICE_SERVERS: RTCIceServer[] = [
-  {urls: ['stun:stun.example.com', 'stun:stun-1.example.com']},
-  {urls: 'stun:stun.l.google.com:19302'}
+  { urls: ['stun:stun.example.com', 'stun:stun-1.example.com'] },
+  { urls: 'stun:stun.l.google.com:19302' }
 ];
 
 const PEER_CONNECTION_CONFIG: RTCConfiguration = {
@@ -28,7 +28,7 @@ export class AppComponent implements OnInit {
 
   constructor(fb: FormBuilder) {
     this.textareas = fb.group({
-      dataChannelSend: new FormControl({value: '', disabled: true}),
+      dataChannelSend: new FormControl({ value: '', disabled: false }),
       dataChannelReceive: ['']
     });
   }
@@ -53,16 +53,21 @@ export class AppComponent implements OnInit {
   }
 
   private setupSignalingServer() {
-    this.signalingConnection = new WebSocket(`ws://${window.location.hostname}:8080/ws/echo`);
+    if(this.signalingConnection == null) {
+    this.signalingConnection = new WebSocket(`wss://antmedia.westeurope.cloudapp.azure.com:5443/WebRTCAppEE/websocket`);
     this.signalingConnection.onmessage = this.getSignalMessageCallback();
     this.signalingConnection.onerror = this.errorHandler;
+    this.signalingConnection.onopen = function(event){
+      console.log(JSON.stringify(event))
+    }
+    }
   }
 
   private setupPeerServer() {
     this.peerConnection = new RTCPeerConnection(PEER_CONNECTION_CONFIG);
     this.peerConnection.onicecandidate = this.getIceCandidateCallback();
-    // this.peerConnection.ondatachannel = (event) => { console.log(`received message from channel`); };
-    // this.sendChannel = this.peerConnection.createDataChannel('sendDataChannel');
+    this.peerConnection.ondatachannel = (event) => { console.log(`received message from channel`); };
+    this.sendChannel = this.peerConnection.createDataChannel('sendDataChannel');
   }
 
   private getSignalMessageCallback(): (string) => void {

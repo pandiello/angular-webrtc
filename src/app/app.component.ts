@@ -38,8 +38,9 @@ export class AppComponent implements OnInit {
     this.uuid = this.createUuid();
   }
 
-  start() {
+  async start() {
     this.setupSignalingServer();
+    await new Promise(resolve => setTimeout(resolve, 1000));
     this.setupPeerServer();
 
     this.peerConnection
@@ -58,7 +59,7 @@ export class AppComponent implements OnInit {
     this.signalingConnection.onmessage = this.getSignalMessageCallback();
     this.signalingConnection.onerror = this.errorHandler;
     this.signalingConnection.onopen = function(event){
-      console.log(JSON.stringify(event))
+      console.log('Open ' + JSON.stringify(event))
     }
     }
   }
@@ -68,6 +69,9 @@ export class AppComponent implements OnInit {
     this.peerConnection.onicecandidate = this.getIceCandidateCallback();
     this.peerConnection.ondatachannel = (event) => { console.log(`received message from channel`); };
     this.sendChannel = this.peerConnection.createDataChannel('sendDataChannel');
+    this.sendChannel.onopen = function(event){
+      console.log('Open ' + JSON.stringify(event))
+    }
   }
 
   private getSignalMessageCallback(): (string) => void {
